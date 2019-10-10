@@ -12,13 +12,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
 
+import droidninja.filepicker.FilePickerBuilder;
+import droidninja.filepicker.FilePickerConst;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -28,8 +33,9 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button button;
+    private Button button,button1,button2,button3;
 
+    ArrayList<String> filepaths = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,11 +60,21 @@ public class MainActivity extends AppCompatActivity {
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    new MaterialFilePicker()
-                            .withActivity(MainActivity.this)
-                            .withRequestCode(10)
-                            .start();
-
+                    filepaths.clear();
+//
+                    FilePickerBuilder.getInstance().setMaxCount(4)
+                            .setSelectedFiles(filepaths)
+                            .setActivityTheme(R.style.AppTheme)
+                            .pickPhoto(MainActivity.this);
+//                    new MaterialFilePicker()
+//                            .withActivity(MainActivity.this)
+//                            .withRequestCode(10)
+//                            .start();
+//                    Intent intent = new Intent();
+//                    intent.setType("image/*");
+//                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+//                    intent.setAction(Intent.ACTION_GET_CONTENT);
+//                    startActivityForResult(Intent.createChooser(intent,"Select Picture"), 1);
                 }
             });
     }
@@ -76,61 +92,140 @@ public class MainActivity extends AppCompatActivity {
 
     ProgressDialog progress;
 
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
+//        if(requestCode == 10 && resultCode == RESULT_OK){
+//
+//            progress = new ProgressDialog(MainActivity.this);
+//            progress.setTitle("Uploading");
+//            progress.setMessage("Please wait...");
+//            progress.show();
+//
+//            Thread t = new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//
+//                    File f  = new File(data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH));
+//                    String content_type  = getMimeType(f.getPath());
+//
+//                    String file_path = f.getAbsolutePath();
+//                    OkHttpClient client = new OkHttpClient();
+//                    RequestBody file_body = RequestBody.create(MediaType.parse(content_type),f);
+//
+//                    RequestBody request_body = new MultipartBody.Builder()
+//                            .setType(MultipartBody.FORM)
+//                            .addFormDataPart("token","P1I0VONPV1SPZA6IJEQJ04VM")
+//                            .addFormDataPart("title","pentintiadfasfads")
+//                            .addFormDataPart("price","7896")
+//                            .addFormDataPart("description","aldjf")
+//                            .addFormDataPart("image1Featured",file_path.substring(file_path.lastIndexOf("/")+1), file_body)
+////                            .addFormDataPart("image2",file_path.substring(file_path.lastIndexOf("/")+1), file_body)
+////                            .addFormDataPart("image3",file_path.substring(file_path.lastIndexOf("/")+1), file_body)
+////                            .addFormDataPart("image4",file_path.substring(file_path.lastIndexOf("/")+1), file_body)
+//                            .build();
+//
+//                    Request request = new Request.Builder()
+//                            .url("https://satyapaulmlk6.pythonanywhere.com/adminuser/createproduct/")
+//                            .post(request_body)
+//                            .build();
+//
+//                    try {
+//                        Response response = client.newCall(request).execute();
+//
+//                        if(!response.isSuccessful()){
+//                            throw new IOException("Error : "+response);
+//                        }
+//
+//                        progress.dismiss();
+//
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//
+//                }
+//            });
+//
+//            t.start();
+//
+//
+//
+//
+//        }
+//    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        if(requestCode == 10 && resultCode == RESULT_OK){
+        super.onActivityResult(requestCode,resultCode,data);
 
-            progress = new ProgressDialog(MainActivity.this);
-            progress.setTitle("Uploading");
-            progress.setMessage("Please wait...");
-            progress.show();
 
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
+            if (data != null && resultCode == RESULT_OK) {
 
-                    File f  = new File(data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH));
-                    String content_type  = getMimeType(f.getPath());
+                progress = new ProgressDialog(MainActivity.this);
+                progress.setTitle("Uploading");
+                progress.setMessage("Please wait...");
+                progress.show();
 
-                    String file_path = f.getAbsolutePath();
-                    OkHttpClient client = new OkHttpClient();
-                    RequestBody file_body = RequestBody.create(MediaType.parse(content_type),f);
+                filepaths = data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_PHOTOS);
 
-                    RequestBody request_body = new MultipartBody.Builder()
-                            .setType(MultipartBody.FORM)
-                            .addFormDataPart("type",content_type)
-                            .addFormDataPart("uploaded_file",file_path.substring(file_path.lastIndexOf("/")+1), file_body)
-                            .build();
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
 
-                    Request request = new Request.Builder()
-                            .url("URL_TO_THE_SERVER/YOUR_SCRIPT.php")
-                            .post(request_body)
-                            .build();
+                        File f = new File(filepaths.get(0));
+                        File f2 = new File(filepaths.get(1));
+                        File f3 = new File(filepaths.get(2));
+                        File f4 = new File(filepaths.get(3));
 
-                    try {
-                        Response response = client.newCall(request).execute();
 
-                        if(!response.isSuccessful()){
-                            throw new IOException("Error : "+response);
+
+
+                        OkHttpClient client = new OkHttpClient();
+                        RequestBody file_body1 = RequestBody.create(MediaType.parse("image/*"), f);
+                        RequestBody file_body2 = RequestBody.create(MediaType.parse("image/*"), f2);
+                        RequestBody file_body3 = RequestBody.create(MediaType.parse("image/*"), f3);
+                        RequestBody file_body4 = RequestBody.create(MediaType.parse("image/*"), f4);
+
+                        RequestBody request_body = new MultipartBody.Builder()
+                                .setType(MultipartBody.FORM)
+                                .addFormDataPart("token", "LXJIS1PZSADNRFB3CIAFD4TH")
+                                .addFormDataPart("title", "NEW APP 10")
+                                .addFormDataPart("price", "7")
+                                .addFormDataPart("description", "a")
+                                .addFormDataPart("image1Featured", filepaths.get(0).substring(filepaths.get(0).lastIndexOf("/") + 1), file_body1)
+                                .addFormDataPart("image2",filepaths.get(1).substring(filepaths.get(1).lastIndexOf("/")+1), file_body2)
+                                .addFormDataPart("image3",filepaths.get(2).substring(filepaths.get(2).lastIndexOf("/")+1), file_body3)
+                                .addFormDataPart("image4",filepaths.get(3).substring(filepaths.get(3).lastIndexOf("/")+1), file_body4)
+                                .build();
+
+                        Request request = new Request.Builder()
+                                .url("https://satyapaulmlk6.pythonanywhere.com/adminuser/createproduct/")
+                                .post(request_body)
+                                .build();
+
+                        try {
+                            Response response = client.newCall(request).execute();
+                            if (!response.isSuccessful()) {
+                                throw new IOException("Error : " + response);
+                            }
+
+                            progress.dismiss();
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
 
-                        progress.dismiss();
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
+                });
+
+                t.start();
 
 
-                }
-            });
-
-            t.start();
-
-
-
-
+            }
         }
-    }
+
+
 
     private String getMimeType(String path) {
 
